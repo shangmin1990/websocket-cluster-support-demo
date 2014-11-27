@@ -57,13 +57,15 @@
   <websocket:mapping path="/demo" handler="androidHandler"/>
   <!-- 启用sockjs支持 -->
   <!--<websocket:sockjs/>-->
-    <websocket:handshake-handler ref="httpSessionHandshake"/>
     <websocket:handshake-interceptors>
-      <bean class="com.benjamin.test.websocket.MyHandshakeInterceptor"/>
+      <ref bean="httpSessionHandshake"/>
     </websocket:handshake-interceptors>
   </websocket:handlers>
-  <bean id = "httpSessionHandshake" class="com.benjamin.websocket.handshake.HandshakeHandlerAdapter">
-    <property name="sessionKey" value="user"></property>
+  <bean id = "httpSessionHandshake" class="com.benjamin.websocket.handshake.HandshakeHandlerInterceptor">
+    <property name="sessionKey" value="a"></property>
+    <property name="httpSessionFactory">
+      <bean class="com.benjamin.websocket.handshake.sessionfacotory.impl.MemcachedIdentityFactory"/>
+    </property>
   </bean>
   <bean id="androidHandler" class="com.benjamin.test.websocket.MyWebSocketHandler2">
     <property name="webSocketSessionProviderFactory" >

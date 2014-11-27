@@ -1,9 +1,12 @@
 package com.benjamin.test;
 
+import com.benjamin.test.entity.User;
+import com.benjamin.test.util.MemcachedUtil;
 import com.benjamin.websocket.entity.StringIdentity;
 import com.benjamin.websocket.router.WebSocketRouter;
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
+import net.spy.memcached.MemcachedClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.TextMessage;
 
 import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import java.net.CookieHandler;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,8 +30,18 @@ import java.util.Map;
 public class TestController {
   @Resource(name = "webSocketRouter")
   private WebSocketRouter webSocketRouter;
+  private MemcachedClient memcachedClient = MemcachedUtil.getClientInstance();
   @RequestMapping("/hello")
-  public String sayHelloWorld(){
+  public String sayHelloWorld(HttpServletResponse response, @RequestParam String username){
+
+    Cookie cookie2 = new Cookie("c","abcdefg");
+    response.addCookie(cookie2);
+    User user = new User();
+    user.setUserId(username);
+    user.setName("defdsafdsdsafa");
+    Cookie cookie = new Cookie("a",username);
+    response.addCookie(cookie);
+    memcachedClient.set(username, 1000*60*30, user);
     return "Hello World+Abcdefg";
   }
 
