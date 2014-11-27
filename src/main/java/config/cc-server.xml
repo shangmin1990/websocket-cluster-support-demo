@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:websocket="http://www.springframework.org/schema/websocket"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/websocket http://www.springframework.org/schema/websocket/spring-websocket.xsd">
+
+  <context:component-scan base-package="com.benjamin.test">
+      <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+      <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service" />
+  </context:component-scan>
+
+  <mvc:annotation-driven>
+    <mvc:message-converters register-defaults="true">
+      <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+        <constructor-arg value="UTF-8"/>
+      </bean>
+    </mvc:message-converters>
+  </mvc:annotation-driven>
+
+  <mvc:default-servlet-handler/>
+
+  <!-- Sockjs 与 stomp协议的支持 -->
+  <!-- SockJS为您提供了一个连贯的，跨浏览器的JavaScript API创建一个低延迟，全双工，浏览器和Web服务器之间的跨域通信通道 -->
+  <!-- 使用STOMP协议能够让我们站在WebSocket的肩膀上。它能够提供一种方法来解析一个消息应该传递给谁，我们又对接收什么样的消息感兴趣。(个人理解为channel的概念,消息信道)
+  如果只使用WebSocket 收到任何消息都会触发onmessage(服务器端handleMessage)回调,而大部分消息不是我们所期待的消息。stomp可以订阅一个地址(channel),只接受此地址的消息,或者往这个地址发送一个消息-->
+  <!-- 有了channel的概念 , 一个webscoket会话可以向不同channel发送(接收)消息,起到消息隔离的效果-->
+  <!-- webSocket协议是比较底层的协议,关心的是握手连接与消息传递, Stomp 定义了消息的格式 ,基于文本-->
+  <!-- Sockjs 是一个为了兼容各种浏览器出现的协议,如果浏览器不支持WebSocket协议,则Sockjs会对其进行降级处理,使用长轮询的方式执行推送 -->
+
+  <!--定义一个消息代理-->
+  <!-- /topic/abc/def/ 默认的分割符 / org.springframework.util.AntPathMatcher-->
+  <!-- 修改分割符号,加入 path-matcher-->
+  <!--??? 没有path-matcher 属性??? 版本问题?-->
+  <!-- application-destination-prefix 客户端消息发送频道前缀 -->
+  <!--<websocket:message-broker application-destination-prefix="/app">-->
+    <!--&lt;!&ndash;web socket 传输设置 &ndash;&gt;-->
+    <!--&lt;!&ndash; message-size=128*1024, send-buffer-size=1024*1024 &ndash;&gt;-->
+    <!--<websocket:transport message-size="131072" send-timeout="25000" send-buffer-size="1048576" />-->
+    <!--&lt;!&ndash;定义一个端点 endpoint 可以定义多个&ndash;&gt;-->
+    <!--<websocket:stomp-endpoint path="/websocket">-->
+      <!--&lt;!&ndash;<websocket:handshake-handler ref="myHandshake"/>&ndash;&gt;-->
+      <!--&lt;!&ndash; 启用sockjs支持 &ndash;&gt;-->
+      <!--<websocket:sockjs/>-->
+    <!--</websocket:stomp-endpoint>-->
+    <!--&lt;!&ndash;server端返回消息 channel必须以topic开头&ndash;&gt;-->
+    <!--<websocket:simple-broker prefix="/topic"/>-->
+  <!--</websocket:message-broker>-->
+
+  <websocket:handlers>
+  <websocket:mapping path="/demo" handler="androidHandler"/>
+  <!-- 启用sockjs支持 -->
+  <!--<websocket:sockjs/>-->
+    <websocket:handshake-handler ref="httpSessionHandshake"/>
+    <websocket:handshake-interceptors>
+      <bean class="com.benjamin.test.websocket.MyHandshakeInterceptor"/>
+    </websocket:handshake-interceptors>
+  </websocket:handlers>
+  <bean id = "httpSessionHandshake" class="com.benjamin.websocket.handshake.HandshakeHandlerAdapter">
+    <property name="sessionKey" value="user"></property>
+  </bean>
+  <bean id="androidHandler" class="com.benjamin.test.websocket.MyWebSocketHandler2">
+    <property name="webSocketSessionProviderFactory" >
+      <bean class="com.benjamin.websocket.sessionprovider.factory.impl.DefaultWebSocketSessionProviderFactory">
+        <property name="globalWebSocketSessionProviderFactory">
+          <bean class="com.benjamin.websocket.sessionprovider.factory.impl.MemCacheGlobalSessionProviderFactory"></bean>
+        </property>
+      </bean>
+    </property>
+  </bean>
+
+  <bean id="webSocketRouter" class="com.benjamin.websocket.router.WebSocketRouterFactoryBean" autowire="byName">
+    <property name="cluster">
+      <list>
+        <value>192.168.9.96:8080</value>
+      </list>
+    </property>
+    <property name="protocol" value="http"></property>
+  </bean>
+
+  <!--<mvc:interceptors>-->
+    <!--&lt;!&ndash;<mvc:interceptor> &lt;!&ndash; 可以增加多个拦截器 &ndash;&gt;&ndash;&gt;-->
+      <!--&lt;!&ndash;<mvc:mapping path="/**"/> &lt;!&ndash; 需要拦截的 &ndash;&gt;&ndash;&gt;-->
+      <!--&lt;!&ndash;<mvc:exclude-mapping path="/user/login"/>  &lt;!&ndash; 不需要拦截的 &ndash;&gt;&ndash;&gt;-->
+      <!--&lt;!&ndash;<mvc:exclude-mapping path="/user/logout"/>&ndash;&gt;-->
+      <!--&lt;!&ndash;<mvc:exclude-mapping path="/internalRequest"/>&ndash;&gt;-->
+      <!--&lt;!&ndash;<mvc:exclude-mapping path="/android/**"/>&ndash;&gt;-->
+      <!--&lt;!&ndash;<bean class="com.krx.security.LoginCheckInterceptor" />&ndash;&gt;-->
+    <!--&lt;!&ndash;</mvc:interceptor>&ndash;&gt;-->
+    <!--<mvc:interceptor> &lt;!&ndash; 可以增加多个拦截器 &ndash;&gt;-->
+      <!--<mvc:mapping path="/user/**"/> &lt;!&ndash; 需要拦截的 &ndash;&gt;-->
+      <!--<mvc:exclude-mapping path="/user/login"/>  &lt;!&ndash; 不需要拦截的 &ndash;&gt;-->
+      <!--<mvc:exclude-mapping path="/user/logout"/>-->
+      <!--<bean class="com.krx.security.CheckPermissionInterceptor" />-->
+    <!--</mvc:interceptor>-->
+    <!--<mvc:interceptor>-->
+      <!--<mvc:mapping path="/internalRequest"/>-->
+      <!--<bean class="com.krx.security.WebsocketInternalRequestInterceptor" />-->
+    <!--</mvc:interceptor>-->
+  <!--</mvc:interceptors>-->
+
+</beans>
+
