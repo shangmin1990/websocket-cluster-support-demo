@@ -54,14 +54,14 @@
   <!--</websocket:message-broker>-->
 
   <websocket:handlers>
-  <websocket:mapping path="/demo" handler="androidHandler"/>
-  <!-- 启用sockjs支持 -->
+  <websocket:mapping path="/android" handler="androidHandler"/>
   <!--<websocket:sockjs/>-->
-    <websocket:handshake-interceptors>
-      <ref bean="httpSessionHandshake"/>
-    </websocket:handshake-interceptors>
+    <!-- 如果从session中自动获取识别符 则将自定义handler集成-->
+    <!--<websocket:handshake-interceptors>-->
+      <!--<ref bean="httpSessionHandshake"/>-->
+    <!--</websocket:handshake-interceptors>-->
   </websocket:handlers>
-  <bean id = "httpSessionHandshake" class="com.benjamin.websocket.handshake.HandshakeHandlerInterceptor">
+  <bean id = "httpSessionHandshake" class="com.benjamin.websocket.handshake.SessionHandshakeHandlerInterceptor">
     <property name="sessionKey" value="a"></property>
     <property name="httpSessionFactory">
       <bean class="com.benjamin.websocket.handshake.sessionfacotory.impl.MemcachedIdentityFactory"/>
@@ -80,7 +80,9 @@
   <bean id="webSocketRouter" class="com.benjamin.websocket.router.WebSocketRouterFactoryBean" autowire="byName">
     <property name="cluster">
       <list>
-        <value>192.168.9.96:8080</value>
+        <value>localhost:8080</value>
+        <value>localhost:8081</value>
+        <value>localhost:8082</value>
       </list>
     </property>
     <property name="protocol" value="http"></property>
