@@ -67,7 +67,11 @@
     <!--</websocket:handshake-interceptors>-->
   </websocket:handlers>
 
-  <bean class="com.benjamin.websocket.sessionprovider.impl.SimpWebSocketSessionProvider"></bean>
+  <bean id="defaultWebSocketSessionProviderFactory" class="com.benjamin.websocket.sessionprovider.factory.impl.DefaultWebSocketSessionProviderFactory">
+    <property name="globalWebSocketSessionProviderFactory">
+      <bean class="com.benjamin.websocket.sessionprovider.factory.impl.MemCacheGlobalSessionProviderFactory"></bean>
+    </property>
+  </bean>
 
   <bean id = "httpSessionHandshake" class="com.benjamin.websocket.handshake.SessionHandshakeHandlerInterceptor">
     <property name="sessionKey" value="a"></property>
@@ -76,13 +80,7 @@
     </property>
   </bean>
   <bean id="androidHandler" class="com.benjamin.test.websocket.MyWebSocketHandler2">
-    <property name="webSocketSessionProviderFactory" >
-      <bean class="com.benjamin.websocket.sessionprovider.factory.impl.DefaultWebSocketSessionProviderFactory">
-        <property name="globalWebSocketSessionProviderFactory">
-          <bean class="com.benjamin.websocket.sessionprovider.factory.impl.MemCacheGlobalSessionProviderFactory"></bean>
-        </property>
-      </bean>
-    </property>
+    <property name="webSocketSessionProviderFactory" ref="defaultWebSocketSessionProviderFactory"></property>
   </bean>
 
   <bean id="webSocketRouter" class="com.benjamin.websocket.router.WebSocketRouterFactoryBean" autowire="byName">
