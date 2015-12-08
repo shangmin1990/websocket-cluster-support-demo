@@ -66,6 +66,9 @@
       <!--<ref bean="httpSessionHandshake"/>-->
     <!--</websocket:handshake-interceptors>-->
   </websocket:handlers>
+
+  <bean class="com.benjamin.websocket.sessionprovider.impl.SimpWebSocketSessionProvider"></bean>
+
   <bean id = "httpSessionHandshake" class="com.benjamin.websocket.handshake.SessionHandshakeHandlerInterceptor">
     <property name="sessionKey" value="a"></property>
     <property name="httpSessionFactory">
